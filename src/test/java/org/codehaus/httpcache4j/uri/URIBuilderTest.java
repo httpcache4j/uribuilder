@@ -92,6 +92,12 @@ public class URIBuilderTest {
     }
 
     @Test
+    public void testNormalizedFromURIWithEncodedQueryParameters() {
+        URI uri = URI.create("http://example.com?q=" + URIEncoder.encodeUTF8("2013-11-12T14:40:17.967+01:00"));
+        assertEquals("URIs did not match", uri, URIBuilder.fromURI(uri).toNormalizedURI());
+    }
+
+    @Test
     public void testFromURIThenResetAndBuildWithQueryParameters() {
         URI uri = URI.create("http://www.example.com/a/path/here?foo=bar&bar=foo");
         URIBuilder builder = URIBuilder.fromURI(uri);

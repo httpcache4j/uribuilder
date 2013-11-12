@@ -364,7 +364,7 @@ public final class URIBuilder {
     public static URIBuilder fromURI(URI uri) {
         boolean pathAbsoluteness = uri.getPath() != null && uri.getPath().startsWith("/");
         boolean endsWithSlash = uri.getPath() != null && uri.getPath().endsWith("/");
-        return new URIBuilder(uri.getScheme(), uri.getSchemeSpecificPart(), uri.getHost(), uri.getPort(), toPathParts(uri.getPath()), uri.getFragment(), QueryParams.parse(uri.getQuery()), pathAbsoluteness, endsWithSlash);
+        return new URIBuilder(uri.getScheme(), uri.getSchemeSpecificPart(), uri.getHost(), uri.getPort(), toPathParts(uri.getPath()), uri.getFragment(), QueryParams.parse(uri.getRawQuery()), pathAbsoluteness, endsWithSlash);
     }
 
     /**
