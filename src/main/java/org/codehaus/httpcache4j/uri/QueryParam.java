@@ -17,4 +17,8 @@ public class QueryParam {
         return value;
     }
 
+    public boolean isEmpty() {
+        return value == null || value.trim().isEmpty();
+    }
+
 }

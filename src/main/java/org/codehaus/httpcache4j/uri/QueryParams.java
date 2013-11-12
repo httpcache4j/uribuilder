@@ -38,7 +38,7 @@ public class QueryParams implements Iterable<QueryParam> {
 
     public boolean contains(QueryParam parameter) {
         List<String> values = parameters.get(parameter.getName());
-        return values != null && (values.isEmpty() && parameter.getValue().isEmpty() || values.contains(parameter.getValue()));
+        return values != null && (values.isEmpty() && parameter.isEmpty() || values.contains(parameter.getValue()));
     }
 
     public QueryParams add(String name, String... value) {
