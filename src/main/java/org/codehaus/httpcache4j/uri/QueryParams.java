@@ -5,7 +5,10 @@ import com.google.common.base.Splitter;
 import java.text.Collator;
 import java.util.*;
 
-public class QueryParams implements Iterable<QueryParam> {
+/**
+ * @author <a href="mailto:hamnis@codehaus.org">Erlend Hamnaberg</a>
+ */
+public final class QueryParams implements Iterable<QueryParam> {
     private final Map<String, List<String>> parameters = new LinkedHashMap<String, List<String>>();
 
     public QueryParams() {

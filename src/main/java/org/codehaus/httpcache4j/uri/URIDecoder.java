@@ -25,7 +25,10 @@ import java.nio.charset.UnsupportedCharsetException;
  * @author <a href="mailto:hamnis@codehaus.org">Erlend Hamnaberg</a>
  * @version $Revision: $
  */
-public class URIDecoder {
+public final class URIDecoder {
+    private URIDecoder() {
+    }
+
     public static String decodeUTF8(String input) {
         return decode(input, "UTF-8");
     }

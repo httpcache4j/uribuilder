@@ -25,7 +25,10 @@ import java.nio.charset.UnsupportedCharsetException;
  * @author <a href="mailto:hamnis@codehaus.org">Erlend Hamnaberg</a>
  * @version $Revision: $
  */
-public class URIEncoder {
+public final class URIEncoder {
+    private URIEncoder() {
+    }
+
     public static String encodeUTF8(String input) {
         return encode(input, "UTF-8");
     }

@@ -1,6 +1,9 @@
 package org.codehaus.httpcache4j.uri;
 
-public class QueryParam {
+/**
+ * @author <a href="mailto:hamnis@codehaus.org">Erlend Hamnaberg</a>
+ */
+public final class QueryParam {
     private String name;
     private String value;
 
@@ -20,5 +23,7 @@ public class QueryParam {
     public boolean isEmpty() {
         return value == null || value.trim().isEmpty();
     }
+
+
 
 }

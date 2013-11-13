@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * to your heart's content, as the instance will never change.
  *
  * @author <a href="mailto:hamnis@codehaus.org">Erlend Hamnaberg</a>
- * @version $Revision: $
  */
 public final class URIBuilder {
     public static AtomicReference<URISchemeDefaults> schemeDefaults = new AtomicReference<URISchemeDefaults>(new URISchemeDefaults());
