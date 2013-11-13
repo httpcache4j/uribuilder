@@ -24,6 +24,7 @@
   <name>URI Builder</name>
   <url>http://github.com/httpcache4j/uribuilder</url>  
   <inceptionYear>2008</inceptionYear>
+  <description>URI Builder</description>
 
   <dependencies>
     <dependency>
