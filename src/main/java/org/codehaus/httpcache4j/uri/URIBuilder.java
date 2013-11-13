@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Immutable URI builder.
  * Paths in this URI builder will be UTF-8 {@link org.codehaus.httpcache4j.uri.URIEncoder URIEncoded}.
- * Query Parameters needs to be URIEncoded before they are added.
+ *
  * All methods return a NEW instance of the URI builder, meaning you can create a ROOT uri builder and use it
  * to your heart's content, as the instance will never change.
  *
