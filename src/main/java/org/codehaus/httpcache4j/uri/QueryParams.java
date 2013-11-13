@@ -148,6 +148,7 @@ public class QueryParams implements Iterable<QueryParam> {
             Collections.sort(params, new Comparator<QueryParam>() {
                 @Override
                 public int compare(QueryParam o1, QueryParam o2) {
+                    //TODO: Possible bug here.
                     return Collator.getInstance(Locale.getDefault()).compare(o1.getName(), o2.getName());
                 }
             });
@@ -156,12 +157,9 @@ public class QueryParams implements Iterable<QueryParam> {
             if (builder.length() > 0) {
                 builder.append("&");
             }
-            String value = parameter.getValue();
-            if (value != null && value.isEmpty()) {
-                builder.append(parameter.getName());
-            }
-            else {
-                builder.append(parameter.getName()).append("=").append(URIEncoder.encodeUTF8(value));
+            builder.append(URIEncoder.encodeUTF8(parameter.getName()));
+            if(!parameter.isEmpty()) {
+                builder.append("=").append(URIEncoder.encodeUTF8(parameter.getValue()));
             }
         }
         if (builder.length() == 0) {
