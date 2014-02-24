@@ -34,9 +34,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>15.0</version>
+      <groupId>net.hamnaberg</groupId>
+      <artifactId>funclite</artifactId>
+      <version>0.2.0</version>
     </dependency>
   </dependencies>
 

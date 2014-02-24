@@ -15,10 +15,7 @@
 
 package org.codehaus.httpcache4j.uri;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import net.hamnaberg.funclite.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -70,7 +67,7 @@ public final class URIBuilder {
      */
     public URIBuilder withPort(int port) {
         Optional<Integer> defaultPort = schemeDefaults.get().getPort(scheme);
-        if (defaultPort.isPresent() && (port == defaultPort.get())) {
+        if (defaultPort.isSome() && (port == defaultPort.get())) {
             port = -1;
         }
         return new URIBuilder(scheme, schemeSpecificPart, host, port, path, fragment, parameters, wasPathAbsolute, endsWithSlash);
@@ -99,11 +96,10 @@ public final class URIBuilder {
         boolean pathAbsolute = wasPathAbsolute || this.path.isEmpty() && path.startsWith("/");
         boolean endsWithSlash = this.endsWithSlash || this.path.isEmpty() && path.endsWith("/");
         List<Path> appendedPath = toPathParts(path);
-        ImmutableList.Builder<Path> currentPath = ImmutableList.builder();
+        ArrayList<Path> currentPath = new ArrayList<Path>();
         currentPath.addAll(this.path);
         currentPath.addAll(appendedPath);
-        return new URIBuilder(scheme, schemeSpecificPart, host, port, currentPath.build(), fragment, parameters, pathAbsolute, endsWithSlash);
-
+        return pathInternal(currentPath, pathAbsolute, endsWithSlash);
     }
 
     /**
@@ -115,11 +111,11 @@ public final class URIBuilder {
      * @return a new URI builder which contains the new path.
      */
     public URIBuilder addPath(List<String> path) {
-        List<Path> appendedPath = Lists.transform(path, stringToPath);
-        ImmutableList.Builder<Path> currentPath = ImmutableList.builder();
+        List<Path> appendedPath = CollectionOps.map(path, stringToPath);
+        ArrayList<Path> currentPath = new ArrayList<Path>();
         currentPath.addAll(this.path);
         currentPath.addAll(appendedPath);
-        return new URIBuilder(scheme, schemeSpecificPart, host, port, currentPath.build(), fragment, parameters, wasPathAbsolute, endsWithSlash);
+        return pathInternal(currentPath, wasPathAbsolute, false);
     }
 
     /**
@@ -151,7 +147,7 @@ public final class URIBuilder {
      * @return a new URI builder which contains the new path.
      */
     public URIBuilder withPath(List<String> pathList) {
-        List<Path> paths = Lists.transform(pathList, stringToPath);
+        List<Path> paths = CollectionOps.map(pathList, stringToPath);
         return pathInternal(paths, false, false);
     }
 
@@ -169,7 +165,7 @@ public final class URIBuilder {
     }
 
     private URIBuilder pathInternal(List<Path> pathList, boolean pathAbsolute, boolean endsWithSlash) {
-        return new URIBuilder(scheme, schemeSpecificPart, host, port, ImmutableList.copyOf(pathList), fragment, parameters, pathAbsolute, endsWithSlash);
+        return new URIBuilder(scheme, schemeSpecificPart, host, port, pathList, fragment, parameters, pathAbsolute, endsWithSlash);
     }
 
     public URIBuilder withFragment(String fragment) {
@@ -344,7 +340,7 @@ public final class URIBuilder {
         if (params == null) {
             return Collections.emptyList();
         }
-        return Lists.transform(params, new Function<String, QueryParam>() {
+        return CollectionOps.map(params, new Function<String, QueryParam>() {
             public QueryParam apply(String s) {
                 return new QueryParam(name, s);
             }
@@ -387,11 +383,11 @@ public final class URIBuilder {
     }
 
     public List<String> getPath() {
-        return Lists.transform(path, pathToString);
+        return CollectionOps.map(path, pathToString);
     }
 
     public List<String> getEncodedPath() {
-        return Lists.transform(path, encodedPathToString);
+        return CollectionOps.map(path, encodedPathToString);
     }
 
     public String getCurrentPath() {
@@ -422,7 +418,7 @@ public final class URIBuilder {
                 path = path.substring(1);
             }
             List<String> stringList = Arrays.asList(path.split("/"));
-            return ImmutableList.copyOf(Lists.transform(stringList, stringToPath));
+            return CollectionOps.map(stringList, stringToPath);
         }
     }
 

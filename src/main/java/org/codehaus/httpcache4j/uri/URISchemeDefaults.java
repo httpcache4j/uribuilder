@@ -1,12 +1,12 @@
 package org.codehaus.httpcache4j.uri;
 
 import java.util.Map;
+import java.util.HashMap;
+import net.hamnaberg.funclite.Optional;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.Maps;
 
 public final class URISchemeDefaults {
-    private final Map<String, Integer> map = Maps.newHashMap();
+    private final Map<String, Integer> map = new HashMap<String, Integer>();
 
     public URISchemeDefaults(Map<String, Integer> defaults) {
         map.putAll(defaults);

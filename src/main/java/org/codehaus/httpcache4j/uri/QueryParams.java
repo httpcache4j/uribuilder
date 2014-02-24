@@ -1,7 +1,5 @@
 package org.codehaus.httpcache4j.uri;
 
-import com.google.common.base.Splitter;
-
 import java.text.Collator;
 import java.util.*;
 
@@ -151,8 +149,7 @@ public final class QueryParams implements Iterable<QueryParam> {
             Collections.sort(params, new Comparator<QueryParam>() {
                 @Override
                 public int compare(QueryParam o1, QueryParam o2) {
-                    //TODO: Possible bug here.
-                    return Collator.getInstance(Locale.getDefault()).compare(o1.getName(), o2.getName());
+                    return Collator.getInstance(Locale.ENGLISH).compare(o1.getName(), o2.getName());
                 }
             });
         }
@@ -201,17 +198,17 @@ public final class QueryParams implements Iterable<QueryParam> {
     public static QueryParams parse(String query) {
         Map<String, List<String>> map = new LinkedHashMap<String, List<String>>();
         if (query != null) {
-            Iterable<String> parts = Splitter.on("&").omitEmptyStrings().trimResults().split(query);
+            String[] parts = query.split("&");
             for (String part : parts) {
-                String[] equalParts = part.split("=");
+                String[] equalParts = part.trim().split("=");
                 String name = null;
                 String value = null;
                 if (equalParts.length == 1) {
-                    name = equalParts[0];
+                    name = equalParts[0].trim();
                 }
                 else if (equalParts.length == 2) {
-                    name = equalParts[0];
-                    value = equalParts[1];
+                    name = equalParts[0].trim();
+                    value = equalParts[1].trim();
                 }
                 if (name != null) {
                     addToQueryMap(map, URIDecoder.decodeUTF8(name), URIDecoder.decodeUTF8(value));

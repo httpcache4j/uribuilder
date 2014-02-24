@@ -15,9 +15,9 @@
 
 package org.codehaus.httpcache4j.uri;
 
-import com.google.common.collect.Iterables;
 import org.junit.Assert;
 import org.junit.Test;
+import net.hamnaberg.funclite.*;
 
 import java.net.URI;
 import java.util.UUID;
@@ -246,6 +246,15 @@ public class URIBuilderTest {
         URIBuilder builder = URIBuilder.fromURI(uri);
         assertEquals("URIs did not match", uri, builder.toURI());
         Iterable<QueryParam> parameters = builder.getParameters();
-        assertEquals(1, Iterables.size(parameters));
+        assertEquals(1, size(parameters));
     }
+
+    public static <A> int size(Iterable<A> iterable) {
+        int size = 0;
+        for (A value : iterable) {
+            size++;
+        }
+        return size;
+    }
+
 }
