@@ -6,7 +6,7 @@ import net.hamnaberg.funclite.Optional;
 
 
 public final class URISchemeDefaults {
-    private final Map<String, Integer> map = new HashMap<String, Integer>();
+    private final Map<String, Integer> map = new HashMap<>();
 
     public URISchemeDefaults(Map<String, Integer> defaults) {
         map.putAll(defaults);

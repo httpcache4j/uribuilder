@@ -32,8 +32,19 @@ import static org.junit.Assert.assertTrue;
 public class URIBuilderTest {
     @Test
     public void testConstructFromExistingURI() {
+        String str = "http://www.example.com/a/path/here";
+        URI uri = URI.create(str);
+        URIBuilder uriBuilder1 = URIBuilder.fromURI(uri);
+        URIBuilder uriBuilder = URIBuilder.fromString(str);
+        assertEquals(uriBuilder.toURI(), uriBuilder1.toURI());
+    }
+
+    @Test
+    public void changePortOfExistingURI() {
         URI uri = URI.create("http://www.example.com/a/path/here");
-        URIBuilder.fromURI(uri);
+        URIBuilder ub = URIBuilder.fromURI(uri).withPort(3333);
+        URI uri2 = URI.create("http://www.example.com:3333/a/path/here");
+        assertEquals(uri2, ub.toURI());
     }
 
     @Test
@@ -246,15 +257,7 @@ public class URIBuilderTest {
         URIBuilder builder = URIBuilder.fromURI(uri);
         assertEquals("URIs did not match", uri, builder.toURI());
         Iterable<QueryParam> parameters = builder.getParameters();
-        assertEquals(1, size(parameters));
-    }
-
-    public static <A> int size(Iterable<A> iterable) {
-        int size = 0;
-        for (A value : iterable) {
-            size++;
-        }
-        return size;
+        assertEquals(1, CollectionOps.size(parameters));
     }
 
 }

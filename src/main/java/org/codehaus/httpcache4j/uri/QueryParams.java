@@ -1,5 +1,8 @@
 package org.codehaus.httpcache4j.uri;
 
+import net.hamnaberg.funclite.CollectionOps;
+import net.hamnaberg.funclite.Optional;
+
 import java.text.Collator;
 import java.util.*;
 
@@ -21,7 +24,7 @@ public final class QueryParams implements Iterable<QueryParam> {
         this(toMap(parameters));
     }
 
-    public QueryParams empty() {
+    public static QueryParams empty() {
         return new QueryParams();
     }
 
@@ -110,10 +113,9 @@ public final class QueryParams implements Iterable<QueryParam> {
         return Collections.emptyList();
     }
 
-    public String getFirst(String name) {
+    public Optional<String> getFirst(String name) {
         List<String> values = get(name);
-        if (!values.isEmpty()) return values.get(0);
-        return null;
+        return CollectionOps.headOption(values);
     }
 
     public QueryParams remove(String name) {
@@ -126,7 +128,7 @@ public final class QueryParams implements Iterable<QueryParam> {
     }
 
     public List<QueryParam> asList() {
-        List<QueryParam> list = new ArrayList<QueryParam>();
+        List<QueryParam> list = new ArrayList<>();
         for (Map.Entry<String, List<String>> entry : parameters.entrySet()) {
             if (entry.getValue().isEmpty()) {
                 list.add(new QueryParam(entry.getKey(), ""));
@@ -146,12 +148,7 @@ public final class QueryParams implements Iterable<QueryParam> {
         StringBuilder builder = new StringBuilder();
         List<QueryParam> params = new ArrayList<QueryParam>(asList());
         if (sort) {
-            Collections.sort(params, new Comparator<QueryParam>() {
-                @Override
-                public int compare(QueryParam o1, QueryParam o2) {
-                    return Collator.getInstance(Locale.ENGLISH).compare(o1.getName(), o2.getName());
-                }
-            });
+            Collections.sort(params, (o1, o2) -> Collator.getInstance(Locale.ENGLISH).compare(o1.getName(), o2.getName()));
         }
         for (QueryParam parameter : params) {
             if (builder.length() > 0) {
@@ -169,7 +166,7 @@ public final class QueryParams implements Iterable<QueryParam> {
     }
 
     private LinkedHashMap<String, List<String>> copy() {
-        return new LinkedHashMap<String, List<String>>(this.parameters);
+        return new LinkedHashMap<>(this.parameters);
     }
 
     @Override
@@ -196,7 +193,7 @@ public final class QueryParams implements Iterable<QueryParam> {
 
 
     public static QueryParams parse(String query) {
-        Map<String, List<String>> map = new LinkedHashMap<String, List<String>>();
+        Map<String, List<String>> map = new LinkedHashMap<>();
         if (query != null) {
             String[] parts = query.split("&");
             for (String part : parts) {
@@ -220,7 +217,7 @@ public final class QueryParams implements Iterable<QueryParam> {
     }
 
     private static Map<String, List<String>> toMap(Iterable<QueryParam> parameters) {
-        Map<String, List<String>> map = new LinkedHashMap<String, List<String>>();
+        Map<String, List<String>> map = new LinkedHashMap<>();
         for (QueryParam parameter : parameters) {
             addToQueryMap(map, parameter.getName(), parameter.getValue());
         }
@@ -228,10 +225,7 @@ public final class QueryParams implements Iterable<QueryParam> {
     }
 
     private static void addToQueryMap(Map<String, List<String>> map, String name, String value) {
-        List<String> list = map.get(name);
-        if (list == null) {
-            list = new ArrayList<String>();
-        }
+        List<String> list = map.getOrDefault(name, new ArrayList<>());
         if (value != null) {
             list.add(value);
         }

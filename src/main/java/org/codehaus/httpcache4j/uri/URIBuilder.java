@@ -16,11 +16,13 @@
 package org.codehaus.httpcache4j.uri;
 
 import net.hamnaberg.funclite.*;
+import net.hamnaberg.funclite.Optional;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 /**
  * Immutable URI builder.
@@ -32,19 +34,19 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author <a href="mailto:hamnis@codehaus.org">Erlend Hamnaberg</a>
  */
 public final class URIBuilder {
-    public static AtomicReference<URISchemeDefaults> schemeDefaults = new AtomicReference<URISchemeDefaults>(new URISchemeDefaults());
+    public static AtomicReference<URISchemeDefaults> schemeDefaults = new AtomicReference<>(new URISchemeDefaults());
 
-    private final String scheme;
-    private final String host;
-    private final int port;
+    private final Optional<String> scheme;
+    private final Optional<String> host;
+    private final Optional<Integer> port;
     private final List<Path> path;
-    private final String fragment;
+    private final Optional<String> fragment;
     private final QueryParams parameters;
     private final boolean wasPathAbsolute;
     private final boolean endsWithSlash;
-    private final String schemeSpecificPart;
+    private final Optional<String> schemeSpecificPart;
 
-    private URIBuilder(String scheme, String schemeSpecificPart, String host, int port, List<Path> path, String fragment, QueryParams parameters, boolean wasPathAbsolute, boolean endsWithSlash) {
+    private URIBuilder(Optional<String> scheme, Optional<String> schemeSpecificPart, Optional<String> host, Optional<Integer> port, List<Path> path, Optional<String> fragment, QueryParams parameters, boolean wasPathAbsolute, boolean endsWithSlash) {
         this.scheme = scheme;
         this.schemeSpecificPart = schemeSpecificPart;
         this.host = host;
@@ -57,7 +59,7 @@ public final class URIBuilder {
     }
 
     public URIBuilder withHost(String host) {
-        return new URIBuilder(scheme, schemeSpecificPart, host, port, path, fragment, parameters, wasPathAbsolute, endsWithSlash);
+        return new URIBuilder(scheme, schemeSpecificPart, Optional.fromNullable(host), port, path, fragment, parameters, wasPathAbsolute, endsWithSlash);
     }
 
     /**
@@ -66,15 +68,19 @@ public final class URIBuilder {
      * @return a new URIBuilder with the port set
      */
     public URIBuilder withPort(int port) {
-        Optional<Integer> defaultPort = schemeDefaults.get().getPort(scheme);
-        if (defaultPort.isSome() && (port == defaultPort.get())) {
-            port = -1;
+        Optional<Integer> defaultPort = scheme.flatMap(s -> schemeDefaults.get().getPort(s));
+
+        if (defaultPort.exists(p -> p == port)) {
+            defaultPort = Optional.none();
         }
-        return new URIBuilder(scheme, schemeSpecificPart, host, port, path, fragment, parameters, wasPathAbsolute, endsWithSlash);
+        else {
+            defaultPort = Optional.some(port);
+        }
+        return new URIBuilder(scheme, schemeSpecificPart, host, defaultPort, path, fragment, parameters, wasPathAbsolute, endsWithSlash);
     }
 
     private boolean isURN() {
-        return scheme != null && scheme.startsWith("urn");
+        return scheme.exists(s -> s.startsWith("urn"));
     }
 
 
@@ -84,7 +90,7 @@ public final class URIBuilder {
      * @return a new URIBuilder with the new scheme set.
      */
     public URIBuilder withScheme(String scheme) {
-        return new URIBuilder(scheme, schemeSpecificPart, host, port, path, fragment, parameters, wasPathAbsolute, endsWithSlash);
+        return new URIBuilder(Optional.fromNullable(scheme), schemeSpecificPart, host, port, path, fragment, parameters, wasPathAbsolute, endsWithSlash);
     }
 
     /**
@@ -96,7 +102,7 @@ public final class URIBuilder {
         boolean pathAbsolute = wasPathAbsolute || this.path.isEmpty() && path.startsWith("/");
         boolean endsWithSlash = this.endsWithSlash || this.path.isEmpty() && path.endsWith("/");
         List<Path> appendedPath = toPathParts(path);
-        ArrayList<Path> currentPath = new ArrayList<Path>();
+        ArrayList<Path> currentPath = new ArrayList<>();
         currentPath.addAll(this.path);
         currentPath.addAll(appendedPath);
         return pathInternal(currentPath, pathAbsolute, endsWithSlash);
@@ -112,7 +118,7 @@ public final class URIBuilder {
      */
     public URIBuilder addPath(List<String> path) {
         List<Path> appendedPath = CollectionOps.map(path, stringToPath);
-        ArrayList<Path> currentPath = new ArrayList<Path>();
+        ArrayList<Path> currentPath = new ArrayList<>();
         currentPath.addAll(this.path);
         currentPath.addAll(appendedPath);
         return pathInternal(currentPath, wasPathAbsolute, false);
@@ -169,7 +175,7 @@ public final class URIBuilder {
     }
 
     public URIBuilder withFragment(String fragment) {
-        return new URIBuilder(scheme, schemeSpecificPart, host, port, path, fragment, parameters, wasPathAbsolute, endsWithSlash);
+        return new URIBuilder(scheme, schemeSpecificPart, host, port, path, Optional.fromNullable(fragment), parameters, wasPathAbsolute, endsWithSlash);
     }
 
     /**
@@ -177,7 +183,7 @@ public final class URIBuilder {
      * @return new URIBuilder with no parameters.
      */
     public URIBuilder noParameters() {
-        return withParameters(parameters.empty());
+        return withParameters(QueryParams.empty());
     }
 
     /**
@@ -263,7 +269,7 @@ public final class URIBuilder {
             }
             builder.append(encodepath ? pathElement.getEncodedValue() : pathElement.getValue());
         }
-        if ((wasPathAbsolute || host != null) && builder.length() > 1) {
+        if ((wasPathAbsolute || host.isSome()) && builder.length() > 1) {
             if (!"/".equals(builder.substring(0, 1))) {
                 builder.insert(0, "/");                
             }
@@ -290,7 +296,7 @@ public final class URIBuilder {
      * @return true if the scheme and host parts are not set.
      */
     public boolean isRelative() {
-        return (scheme == null && host == null);
+        return (scheme.isNone() && host.isNone());
     }
 
     public URI toAbsoluteURI() {
@@ -300,19 +306,16 @@ public final class URIBuilder {
     private URI toURI(boolean encodePath, boolean sortQP, boolean absolutify) {
         try {
             if (isURN()) {
-                return new URI(scheme, schemeSpecificPart, fragment);
+                return new URI(scheme.get(), schemeSpecificPart.get(), fragment.orNull());
             }
             StringBuilder sb = new StringBuilder();
-            if (scheme != null) {
-                sb.append(scheme);
+            scheme.foreach(s ->{
+                sb.append(s);
                 sb.append("://");
-            }
-            if (host != null) {
-                sb.append(host);
-            }
-            if (port > -1) {
-                sb.append(":").append(port);
-            }
+            });
+            host.foreach(sb::append);
+            port.foreach(p -> sb.append(":").append(p));
+
             if (!path.isEmpty()) {
                 String path = toPath(encodePath);
                 if (absolutify && isRelative() && !path.startsWith("/")) {
@@ -324,10 +327,10 @@ public final class URIBuilder {
                 sb.append("?");
                 sb.append(parameters.toQuery(sortQP));
             }
-            if (fragment != null) {
+            fragment.foreach(f -> {
                 sb.append("#");
-                sb.append(fragment);
-            }
+                sb.append(f);
+            });
             return URI.create(sb.toString());
         } catch (URISyntaxException e) {
             throw new IllegalStateException(e);
@@ -337,17 +340,13 @@ public final class URIBuilder {
     
     public List<QueryParam> getParametersByName(final String name) {
         List<String> params = parameters.get(name);
-        if (params == null) {
+        if (params.isEmpty()) {
             return Collections.emptyList();
         }
-        return CollectionOps.map(params, new Function<String, QueryParam>() {
-            public QueryParam apply(String s) {
-                return new QueryParam(name, s);
-            }
-        });
+        return CollectionOps.map(params, s -> new QueryParam(name, s));
     }
 
-    public String getFirstParameterValueByName(final String name) {
+    public Optional<String> getFirstParameterValueByName(final String name) {
         return parameters.getFirst(name);
     }
 
@@ -359,7 +358,26 @@ public final class URIBuilder {
     public static URIBuilder fromURI(URI uri) {
         boolean pathAbsoluteness = uri.getPath() != null && uri.getPath().startsWith("/");
         boolean endsWithSlash = uri.getPath() != null && uri.getPath().endsWith("/");
-        return new URIBuilder(uri.getScheme(), uri.getSchemeSpecificPart(), uri.getHost(), uri.getPort(), toPathParts(uri.getPath()), uri.getFragment(), QueryParams.parse(uri.getRawQuery()), pathAbsoluteness, endsWithSlash);
+        return new URIBuilder(
+                Optional.fromNullable(uri.getScheme()),
+                Optional.fromNullable(uri.getSchemeSpecificPart()),
+                Optional.fromNullable(uri.getHost()),
+                Optional.some(uri.getPort()).filter(p -> p != -1),
+                toPathParts(uri.getPath()),
+                Optional.fromNullable(uri.getFragment()),
+                QueryParams.parse(uri.getRawQuery()),
+                pathAbsoluteness,
+                endsWithSlash
+        );
+    }
+
+    /**
+     * Constructs a new URIBuilder from the given URI
+     * @param uri the uri to use
+     * @return a new URIBuilder which has the information from the URI.
+     */
+    public static URIBuilder fromString(String uri) {
+        return fromURI(URI.create(uri));
     }
 
     /**
@@ -367,19 +385,19 @@ public final class URIBuilder {
      * @return an empty URIBuilder which result of {@link #toURI()} ()} will return "".
      */
     public static URIBuilder empty() {
-        return new URIBuilder(null, "", null, -1, Collections.<Path>emptyList(), null, new QueryParams(), false, false);
+        return new URIBuilder(Optional.<String>none(), Optional.<String>none(), Optional.<String>none(), Optional.<Integer>none(), Collections.<Path>emptyList(), Optional.<String>none(), new QueryParams(), false, false);
     }
 
-    public String getScheme() {
+    public Optional<String> getScheme() {
         return scheme;
     }
 
-    public String getHost() {
+    public Optional<String> getHost() {
         return host;
     }
 
     public int getPort() {
-        return port;
+        return port.getOrElse(-1);
     }
 
     public List<String> getPath() {
@@ -394,7 +412,7 @@ public final class URIBuilder {
         return toPath(false);
     }
 
-    public String getFragment() {
+    public Optional<String> getFragment() {
         return fragment;
     }
 
@@ -422,23 +440,11 @@ public final class URIBuilder {
         }
     }
 
-    private static Function<String, Path> stringToPath = new Function<String, Path>() {
-        public Path apply(String from) {
-            return new Path(from);
-        }
-    };
+    private static Function<String, Path> stringToPath = Path::new;
 
-    private static Function<Path, String> pathToString = new Function<Path, String>() {
-        public String apply(Path from) {
-            return from.getValue();
-        }
-    };
+    private static Function<Path, String> pathToString = Path::getValue;
 
-    private static Function<Path, String> encodedPathToString = new Function<Path, String>() {
-        public String apply(Path from) {
-            return from.getEncodedValue();
-        }
-    };
+    private static Function<Path, String> encodedPathToString = Path::getEncodedValue;
 
     private static class Path {
         private final String value;

@@ -17,6 +17,8 @@ package org.codehaus.httpcache4j.uri;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 
 /**
@@ -30,17 +32,21 @@ public final class URIDecoder {
     }
 
     public static String decodeUTF8(String input) {
-        return decode(input, "UTF-8");
+        return decode(input, StandardCharsets.UTF_8);
     }
 
     public static String decode(String input, String encoding) {
+        return decode(input, Charset.forName(encoding));
+    }
+
+    public static String decode(String input, Charset encoding) {
         if (input == null) {
             return null;
         }
         try {
-            return URLDecoder.decode(input, encoding);
+            return URLDecoder.decode(input, encoding.name());
         } catch (UnsupportedEncodingException e) {
-            throw new UnsupportedCharsetException(encoding);
+            throw new UnsupportedCharsetException(encoding.name());
         }
     }
 }
