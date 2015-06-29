@@ -155,17 +155,13 @@
     <repository>
       <id>codehaus-staging</id>
       <name>Codehaus staging repo</name>
-      <url>https://nexus.codehaus.org/service/local/staging/deploy/maven2</url>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
     </repository>
     <snapshotRepository>
       <id>codehaus-snapshots</id>
       <name>Codehaus maven repo</name>
-      <url>https://nexus.codehaus.org/content/repositories/snapshots</url>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     </snapshotRepository>
-    <site>
-      <id>codehaus-site</id>
-      <url>dav:https://dav.codehaus.org/httpcache4j</url>
-    </site>
   </distributionManagement>
 
   <profiles>
@@ -181,7 +177,7 @@
         <plugins>
           <plugin>
             <artifactId>maven-enforcer-plugin</artifactId>
-            <version>1.3.1</version>
+            <version>1.4</version>
             <executions>
               <execution>
                 <goals>
@@ -207,7 +203,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.4</version>
+            <version>1.6</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
