@@ -17,7 +17,6 @@ package org.codehaus.httpcache4j.uri;
 
 import org.junit.Assert;
 import org.junit.Test;
-import net.hamnaberg.funclite.*;
 
 import java.net.URI;
 import java.util.UUID;
@@ -234,7 +233,7 @@ public class URIBuilderTest {
         URIBuilder builder = URIBuilder.fromURI(uri).addParameter("bar", "baz");
         assertEquals("URIs did not match", URI.create("http://example.com?q&bar=baz"), builder.toURI());
         builder = URIBuilder.fromURI(URI.create("http://example.com?q&bar=baz"));
-        assertTrue(builder.getParameters().contains("q", null));
+        assertTrue("We expected to contain a null param",builder.getParameters().contains("q", null));
     }
 
     @Test
@@ -256,8 +255,8 @@ public class URIBuilderTest {
         URI uri = URI.create("lala?=hei");
         URIBuilder builder = URIBuilder.fromURI(uri);
         assertEquals("URIs did not match", uri, builder.toURI());
-        Iterable<QueryParam> parameters = builder.getParameters();
-        assertEquals(1, CollectionOps.size(parameters));
+        QueryParams parameters = builder.getParameters();
+        assertEquals(1, parameters.size());
     }
 
 }

@@ -33,11 +33,6 @@
       <version>4.11</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>net.hamnaberg</groupId>
-      <artifactId>funclite</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
-    </dependency>
   </dependencies>
 
   <issueManagement>
@@ -103,7 +98,7 @@
           <version>2.8</version>
         </plugin>
         <plugin>
-	  <artifactId>maven-jar-plugin</artifactId>
+          <artifactId>maven-jar-plugin</artifactId>
           <version>2.4</version>
           <executions>
             <execution>

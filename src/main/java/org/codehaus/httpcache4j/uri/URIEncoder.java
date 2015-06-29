@@ -40,9 +40,8 @@ public final class URIEncoder {
     }
 
     public static String encode(String input, Charset encoding) {
-        if (input == null) {
-            return null;
-        }
+        if (input == null) return null;
+        if (input.trim().isEmpty()) return "";
         try {
             return URLEncoder.encode(input, encoding.name());
         } catch (UnsupportedEncodingException e) {

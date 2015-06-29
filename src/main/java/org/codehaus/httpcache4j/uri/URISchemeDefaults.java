@@ -2,7 +2,7 @@ package org.codehaus.httpcache4j.uri;
 
 import java.util.Map;
 import java.util.HashMap;
-import net.hamnaberg.funclite.Optional;
+import java.util.Optional;
 
 
 public final class URISchemeDefaults {
@@ -20,6 +20,6 @@ public final class URISchemeDefaults {
     }
 
     public Optional<Integer> getPort(String scheme) {
-        return Optional.fromNullable(map.get(scheme));
+        return Optional.ofNullable(map.get(scheme));
     }
 }

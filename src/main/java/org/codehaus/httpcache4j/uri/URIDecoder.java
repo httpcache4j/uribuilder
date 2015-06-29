@@ -40,9 +40,8 @@ public final class URIDecoder {
     }
 
     public static String decode(String input, Charset encoding) {
-        if (input == null) {
-            return null;
-        }
+        if (input == null) return null;
+        else if (input.trim().isEmpty()) return "";
         try {
             return URLDecoder.decode(input, encoding.name());
         } catch (UnsupportedEncodingException e) {

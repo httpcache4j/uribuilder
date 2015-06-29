@@ -1,16 +1,14 @@
 package org.codehaus.httpcache4j.uri;
 
-import net.hamnaberg.funclite.CollectionOps;
-import net.hamnaberg.funclite.Optional;
-
 import java.text.Collator;
 import java.util.*;
+import java.util.stream.*;
 
 /**
  * @author <a href="mailto:hamnis@codehaus.org">Erlend Hamnaberg</a>
  */
 public final class QueryParams implements Iterable<QueryParam> {
-    private final Map<String, List<String>> parameters = new LinkedHashMap<String, List<String>>();
+    private final Map<String, List<String>> parameters = new LinkedHashMap<>();
 
     public QueryParams() {
         this(Collections.<String, List<String>>emptyMap());
@@ -32,6 +30,10 @@ public final class QueryParams implements Iterable<QueryParam> {
         return parameters.isEmpty();
     }
 
+    public int size() {
+        return asList().size();
+    }
+
     public boolean contains(String name) {
         return parameters.containsKey(name);
     }
@@ -46,7 +48,7 @@ public final class QueryParams implements Iterable<QueryParam> {
     }
 
     public QueryParams add(String name, String... value) {
-        List<QueryParam> p = new ArrayList<QueryParam>();
+        List<QueryParam> p = new ArrayList<>();
         if (value.length == 0) {
             p.add(new QueryParam(name, null));
         }
@@ -61,8 +63,7 @@ public final class QueryParams implements Iterable<QueryParam> {
     }
 
     public QueryParams add(Iterable<QueryParam> params) {
-        Map<String, List<String>> map = toMap(params);
-        return add(map);
+        return add(toMap(params));
     }
 
     public QueryParams add(Map<String, List<String>> params) {
@@ -83,24 +84,15 @@ public final class QueryParams implements Iterable<QueryParam> {
         return new QueryParams(map);
     }
 
-    public QueryParams set(String name, String value) {
-        LinkedHashMap<String, List<String>> copy = copy();
-        copy.remove(name);
-        if (value != null) {
-            ArrayList<String> list = new ArrayList<String>();
-            list.add(value);
-            copy.put(name, list);
-        }
-        return new QueryParams(copy);
+    public QueryParams set(String name, String... value) {
+        return set(name, value != null ? Arrays.asList(value) : Collections.emptyList());
     }
 
     public QueryParams set(String name, List<String> value) {
         LinkedHashMap<String, List<String>> copy = copy();
         copy.remove(name);
         if (!value.isEmpty()) {
-            ArrayList<String> list = new ArrayList<String>();
-            list.addAll(value);
-            copy.put(name, list);
+            copy.put(name, value.stream().collect(Collectors.toList()));
         }
         return new QueryParams(copy);
     }
@@ -113,9 +105,17 @@ public final class QueryParams implements Iterable<QueryParam> {
         return Collections.emptyList();
     }
 
+    public List<QueryParam> getAsQueryParam(String name) {
+        List<String> list = parameters.get(name);
+        if (list != null) {
+            return list.stream().map(v -> new QueryParam(name, v)).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+
     public Optional<String> getFirst(String name) {
         List<String> values = get(name);
-        return CollectionOps.headOption(values);
+        return values.stream().findFirst();
     }
 
     public QueryParams remove(String name) {
@@ -128,16 +128,13 @@ public final class QueryParams implements Iterable<QueryParam> {
     }
 
     public List<QueryParam> asList() {
-        List<QueryParam> list = new ArrayList<>();
-        for (Map.Entry<String, List<String>> entry : parameters.entrySet()) {
-            if (entry.getValue().isEmpty()) {
-                list.add(new QueryParam(entry.getKey(), ""));
+        return parameters.entrySet().stream().flatMap(e -> {
+            if (e.getValue().isEmpty()) {
+                return Stream.of(new QueryParam(e.getKey(), ""));
+            } else {
+                return e.getValue().stream().map(v -> new QueryParam(e.getKey(), v));
             }
-            for (String value : entry.getValue()) {
-                list.add(new QueryParam(entry.getKey(), value));
-            }
-        }
-        return Collections.unmodifiableList(list);
+        }).collect(Collectors.toList());
     }
 
     public Map<String, List<String>> asMap() {
@@ -146,7 +143,7 @@ public final class QueryParams implements Iterable<QueryParam> {
 
     public String toQuery(boolean sort) {
         StringBuilder builder = new StringBuilder();
-        List<QueryParam> params = new ArrayList<QueryParam>(asList());
+        List<QueryParam> params = new ArrayList<>(asList());
         if (sort) {
             Collections.sort(params, (o1, o2) -> Collator.getInstance(Locale.ENGLISH).compare(o1.getName(), o2.getName()));
         }
@@ -193,42 +190,35 @@ public final class QueryParams implements Iterable<QueryParam> {
 
 
     public static QueryParams parse(String query) {
-        Map<String, List<String>> map = new LinkedHashMap<>();
         if (query != null) {
-            String[] parts = query.split("&");
-            for (String part : parts) {
-                String[] equalParts = part.trim().split("=");
-                String name = null;
-                String value = null;
-                if (equalParts.length == 1) {
-                    name = equalParts[0].trim();
-                }
-                else if (equalParts.length == 2) {
-                    name = equalParts[0].trim();
-                    value = equalParts[1].trim();
-                }
-                if (name != null) {
-                    addToQueryMap(map, URIDecoder.decodeUTF8(name), URIDecoder.decodeUTF8(value));
-                }
-            }
+            List<String> parts = Arrays.asList(query.split("&"));
+            return new QueryParams(toMap(parts.stream().map(QueryParams::parseQP).collect(Collectors.toList())));
         }
 
-        return new QueryParams(map);
+        return new QueryParams(Collections.emptyMap());
+    }
+
+    private static QueryParam parseQP(String s) {
+        String[] equalParts = s.trim().split("=");
+        String name = null;
+        String value = null;
+        if (equalParts.length == 1) {
+            name = equalParts[0].trim();
+        }
+        else if (equalParts.length == 2) {
+            name = equalParts[0].trim();
+            value = equalParts[1].trim();
+        }
+        return new QueryParam(URIDecoder.decodeUTF8(name), URIDecoder.decodeUTF8(value));
     }
 
     private static Map<String, List<String>> toMap(Iterable<QueryParam> parameters) {
-        Map<String, List<String>> map = new LinkedHashMap<>();
-        for (QueryParam parameter : parameters) {
-            addToQueryMap(map, parameter.getName(), parameter.getValue());
-        }
+        Stream<QueryParam> stream = StreamSupport.stream(parameters.spliterator(), false);
+        Map<String, java.util.List<QueryParam>> nqp = stream.collect(Collectors.groupingBy(QueryParam::getName, LinkedHashMap::new, Collectors.toList()));
+        LinkedHashMap<String, List<String>> map = new LinkedHashMap<>(nqp.size());
+        nqp.forEach((k, v) ->
+                        map.put(k, v.stream().map(QueryParam::getValue).collect(Collectors.toList()))
+        );
         return map;
-    }
-
-    private static void addToQueryMap(Map<String, List<String>> map, String name, String value) {
-        List<String> list = map.getOrDefault(name, new ArrayList<>());
-        if (value != null) {
-            list.add(value);
-        }
-        map.put(name, list);
     }
 }
