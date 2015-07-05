@@ -267,7 +267,7 @@ public final class URIBuilder {
             }
             builder.append(encodepath ? pathElement.getEncodedValue() : pathElement.getValue());
         }
-        if ((wasPathAbsolute || host.isPresent()) && builder.length() > 1) {
+        if ((wasPathAbsolute || host.isPresent()) && builder.length() > 0) {
             if (!"/".equals(builder.substring(0, 1))) {
                 builder.insert(0, "/");                
             }

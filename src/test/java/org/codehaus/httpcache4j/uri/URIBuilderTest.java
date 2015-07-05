@@ -108,6 +108,13 @@ public class URIBuilderTest {
     }
 
     @Test
+    public void testNormalizedFromShortURI() {
+        String str = "http://www.example.com/a";
+        URI uri = URI.create(str);
+        assertEquals("URIs did not match", uri, URIBuilder.fromURI(uri).toNormalizedURI());
+    }
+
+    @Test
     public void testFromURIThenResetAndBuildWithQueryParameters() {
         URI uri = URI.create("http://www.example.com/a/path/here?foo=bar&bar=foo");
         URIBuilder builder = URIBuilder.fromURI(uri);
