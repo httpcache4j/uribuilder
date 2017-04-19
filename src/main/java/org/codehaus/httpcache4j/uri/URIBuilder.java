@@ -220,7 +220,7 @@ public final class URIBuilder {
      * @return a new instance of the URIBuilder
      */
     public URIBuilder addParameter(QueryParam parameter) {
-        return addParameters(Arrays.asList(parameter));
+        return addParameters(Collections.singletonList(parameter));
     }
 
     /**
@@ -269,7 +269,7 @@ public final class URIBuilder {
         }
         if ((wasPathAbsolute || host.isPresent()) && builder.length() > 0) {
             if (!"/".equals(builder.substring(0, 1))) {
-                builder.insert(0, "/");                
+                builder.insert(0, "/");
             }
         }
         if (endsWithSlash) {
@@ -279,11 +279,15 @@ public final class URIBuilder {
     }
 
     public URI toURI() {
-        return toURI(true, false, false);
+        return toURI(true, false, false, Locale.ENGLISH);
     }
 
     public URI toNormalizedURI(boolean encodePath) {
-        return toURI(encodePath, true, false).normalize();
+        return toNormalizedURI(encodePath, Locale.ENGLISH);
+    }
+
+    public URI toNormalizedURI(boolean encodePath, Locale locale) {
+        return toURI(encodePath, true, false, locale).normalize();
     }
 
     public URI toNormalizedURI() {
@@ -298,10 +302,10 @@ public final class URIBuilder {
     }
 
     public URI toAbsoluteURI() {
-        return toURI(true, false, true);
+        return toURI(true, false, true, Locale.ENGLISH);
     }
 
-    private URI toURI(boolean encodePath, boolean sortQP, boolean absolutify) {
+    private URI toURI(boolean encodePath, boolean sortQP, boolean absolutify, Locale locale) {
         try {
             if (isURN()) {
                 return new URI(scheme.get(), schemeSpecificPart.get(), fragment.orElse(null));
@@ -316,14 +320,16 @@ public final class URIBuilder {
 
             if (!path.isEmpty()) {
                 String path = toPath(encodePath);
-                if (absolutify && isRelative() && !path.startsWith("/")) {
-                    path = "/" + path;
+                if (path != null) {
+                    if (absolutify && isRelative() && !path.startsWith("/")) {
+                        path = "/" + path;
+                    }
+                    sb.append(path);
                 }
-                sb.append(path);
             }
             if (!parameters.isEmpty()) {
                 sb.append("?");
-                sb.append(parameters.toQuery(sortQP));
+                sb.append(parameters.toQuery(sortQP, locale));
             }
             fragment.ifPresent(f -> {
                 sb.append("#");
@@ -335,9 +341,12 @@ public final class URIBuilder {
         }
     }
 
-    
+
     public List<QueryParam> getParametersByName(final String name) {
         return parameters.getAsQueryParam(name);
+    }
+    public List<String> getParameterValuesByName(final String name) {
+        return parameters.get(name);
     }
 
     public Optional<String> getFirstParameterValueByName(final String name) {

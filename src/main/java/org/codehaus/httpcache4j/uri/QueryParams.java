@@ -11,7 +11,7 @@ public final class QueryParams implements Iterable<QueryParam> {
     private final Map<String, List<String>> parameters = new LinkedHashMap<>();
 
     public QueryParams() {
-        this(Collections.<String, List<String>>emptyMap());
+        this(Collections.emptyMap());
     }
 
     public QueryParams(Map<String, List<String>> parameters) {
@@ -92,17 +92,14 @@ public final class QueryParams implements Iterable<QueryParam> {
         LinkedHashMap<String, List<String>> copy = copy();
         copy.remove(name);
         if (!value.isEmpty()) {
-            copy.put(name, value.stream().collect(Collectors.toList()));
+            copy.put(name, new ArrayList<>(value));
         }
         return new QueryParams(copy);
     }
 
     public List<String> get(String name) {
-        List<String> list = parameters.get(name);
-        if (list != null) {
-            return Collections.unmodifiableList(list);
-        }
-        return Collections.emptyList();
+        Optional<List<String>> maybeList = Optional.ofNullable(parameters.get(name));
+        return maybeList.map(Collections::unmodifiableList).orElse(Collections.emptyList());
     }
 
     public List<QueryParam> getAsQueryParam(String name) {
@@ -142,10 +139,14 @@ public final class QueryParams implements Iterable<QueryParam> {
     }
 
     public String toQuery(boolean sort) {
+        return toQuery(sort, Locale.ENGLISH);
+    }
+
+    public String toQuery(boolean sort, Locale locale) {
         StringBuilder builder = new StringBuilder();
         List<QueryParam> params = new ArrayList<>(asList());
         if (sort) {
-            Collections.sort(params, (o1, o2) -> Collator.getInstance(Locale.ENGLISH).compare(o1.getName(), o2.getName()));
+            params.sort((o1, o2) -> Collator.getInstance(locale).compare(o1.getName(), o2.getName()));
         }
         for (QueryParam parameter : params) {
             if (builder.length() > 0) {
@@ -217,7 +218,7 @@ public final class QueryParams implements Iterable<QueryParam> {
         Map<String, java.util.List<QueryParam>> nqp = stream.collect(Collectors.groupingBy(QueryParam::getName, LinkedHashMap::new, Collectors.toList()));
         LinkedHashMap<String, List<String>> map = new LinkedHashMap<>(nqp.size());
         nqp.forEach((k, v) ->
-                        map.put(k, v.stream().map(QueryParam::getValue).collect(Collectors.toList()))
+                map.put(k, v.stream().map(QueryParam::getValue).collect(Collectors.toList()))
         );
         return map;
     }
